@@ -1,0 +1,162 @@
+IAG uCMDB production code changes -- 24/11/2014
+
+PACKAGE: IBM_HMC
+ADAPTER: IBM_HMC_SHELL_PATTERN
+NOTES ON CHANGE: EXECUTION OPTIONS - Create Comm log changed from on failure to Always
+
+SCRIPT: ibm_hmc_by_shell.py
+NOTES ON CHANGE:
+line 333 - 340
+Comments: modified by Daniel La to put in check for valid IP.
+FROM: JDS
+
+SCRIPT: ibm_lpar_or_vio_by_shell.py
+NOTES ON CHANGE:
+LINE 698
+Comments: modified by Daniel La 29/03/2012 use to be output = '', now output = None
+
+LINE 711
+Comments: output = None   # added by Daniel La 29/03/2012 to reset value of output
+FROM: JDS
+
+PACKAGE: VMWare
+ADAPTER: VMWare_VirtualCentre_Connection_by_VIM, VMWare_VirtualCenter_Topology_by_VIM
+NOTES ON CHANGE: EXECUTION OPTIONS - Create Comm log changed from on failure to Always
+
+
+PACKAGE: DB_by_HostCredentials
+ADAPTER: DB_Connect_by_Agent, DB_Connect_by_TTY
+NOTES ON CHANGE: DB_Connect_by_Agent - include results in comm log
+DB_Connect_by_TTY - Create Comm log changed from on failure to Always, include results in comm log = YES
+SCRIPT: DB_Connect_by_TTY.py
+NOTES ON CHANGE: line 146 logger.debugEception('') to logger.debugException('')
+SCRIPT: dbconnect_db2.py
+
+NOTES ON CHANGE:
+LINE 89 - LINE 108 - ## Daniel La: This box has DB2. We will look for userName in /etc/passwd to find it's home directory. This home directory is what should
+## be used to search for possible DB2 install paths. This information was provided by Felix Iwan from DB2 team.
+
+LINE 264 - 499  - getDbDirectory(), getDatabases(), getListenerPort() - 3 functions are modified by Daniel La over original HP code.
+
+SCRIPT: dbconnect_mssql.py
+NOTES ON CHANGE: LINE 39 - 50 - findDatabases() function changed - not sure who did it as no comments in file
+LINE 50 - 154 - processProcToPortDict() function changed - not sure who did it as no comments in file
+LINE 161 - 304 - registryLookup() function changed - # modified to fix issues with not searching the registry properly for listening ports - Daniel La (JDS) 25/06/2014.
+# original version is shown after this method.
+LINE 307 - 441 - registryLookup_orig() - added new function - # Original registryLookup - drop the "_orig" if need to revert back to original - Daniel La (JDS) 25/06/2014
+
+SCRIPT: dbconnect_oracle.py
+NOTES ON CHANGE:
+LINE 37 - 39 ---> 3x lines commented out -         # Commented out below by Daniel La 06/01/11 - Been told not to detect Oracle DBs through these files. So only look
+        # at services and processes to get DB instance names. Also tnsnames.ora may not necessarily be on the Oracle server. This file is used
+        # on an Oracle client.
+LINE 45 - 138 -> processProcToPortDict() modified - ## Updated by Daniel La: this method will only set listening port for Oracle DB's when there is only one listener listening on one port.
+## For all other cases, no port is set for found Oracle DBs.
+
+LINE 369 - 370 - 2x lines commented out - # Don't want to add non running databases - Daniel La
+
+SCRIPT: dbconnect_unix_shellutils.py
+NOTES ON CHANGE:
+LINE 378 - line commented out
+LINE 379 - line modified - lsofCmd = '/usr/local/bin/lsof -n -P -i | grep -i listen 2>/dev/null' # need to specify fullpath - Daniel La
+LINE 432 - 609 - getProcToPortDictOnAIX() function modified - # Daniel La - enhanced to handle situation when process listens on multiple ports
+FROM: JDS
+
+SCRIPT: dbconnect_utils.py
+NOTES ON CHANGE:
+LINE 28 - debuglevel = 3 instead of debuglevel = 0
+LINE 46 - INSTANCE_INDEX = 6 #Daniel LA for DB2
+LINE 218 - line modified --> findCommand = 'cd \"%s\" && dir %s /s /b' % (rootDirectory, fileName) # modified by Daniel La
+LINE 230 - line modified -->         if findResults.find("is invalid") > 0 or findResults.find("File not Found") > 0 or findResults.find("File not found") > 0 or findResults.find("cannot find") > 0 or findResults.find("not set") > 0 or findResults.lower().find("permission") > 0 or len(findResults) < 1: # modified by Daniel La
+LINE 281 - 362 - makeDbOSHs() modified --> ## Updated: Slightly updated by Daniel La to update an additional attribute for DB2
+LINE 409 - getRegValues() modified --> # updated getRegValues to use 64bit switch when running reg.exe.
+# original version is shown below this. rename the method if required to revert back.
+# Daniel La (JDS) - 25/06/2014.
+
+SCRIPT: dbconnect_win_shellutils.py
+NOTES ON CHANGE:
+LINE 223 - getProcToPortDictOnWindows() - function modified # keys to delete - Daniel La  ## Updated by Daniel La: updated to handle situation where a process can listen on multiple ports.
+
+PACKAGE: Network
+ADAPTERS: Host_Connection_By_Shell, SNMP_NET_Dis_Port, SNMP_NET_Dis_HostBase, WMI_NET_Dis_Connection
+NOTES ON CHANGE: Create Comm log changed from on failure to Always, Included results in comm log.
+
+SCRIPT: SNMP_Networking_Utils.py
+NOTES ON CHANGE: ucmdb UI says it's changed but files matched with original.
+
+PACKAGE: DB2
+ADAPTER: SQL_APP_Dis_Db2
+NOTES ON CHANGE: Included results in comm log. Also many scripts not in the package anymore. Might need to investigate further on change impacts.
+
+SCRIPT: db2_dis_physical.py
+NOTES ON CHANGE: Many changes by Daniel La,
+
+PACKAGE: Database_Basic
+ADAPTERS: SQL_NET_Dis_Connection_MsSql, SQL_NET_Dis_Connection_Oracle
+NOTES ON CHANGE: Included comm logs, create comm logs = awlays, also looks like this package was added by someone (it doesn't look like it's out of the box)
+
+SCRIPT: SQL_Connection.py
+NOTES ON CHANGE:
+LINE 354: sidsthatwork = [] # added by Daniel La
+LINE 63 - 88: discoverDB() - function modified - # modified by Daniel La to get Version.. need latest row.. this is for DB2
+LINE 94: connectByProtocol() - function modified - # updated version by Daniel La 28/02/11
+# this version tries already configured port for database CI.. this way we can skip
+# trying all ports to sid which is how the original version works.
+
+PACKAGE: SQL_Server
+ADAPTERS: SQL_APP_Dis_SqlServer
+NOTES ON CHANGE: create comm log = always, include results = yes
+
+SCRIPT: DatabaseProps.py
+NOTES ON CHANGE: files match but UI says it's being changed
+
+SCRIPT: SqlDatabase.py
+NOTES ON CHANGE:
+LINE 51: osh.setAttribute('sqlfile_size_double',float(size)) # added by Daniel La because sqlfile_size is represented as a string. Can't use for calculations 10/01/2012
+
+SCRIPT: Util.py
+NOTES ON CHANGE:
+LINE 23:         return path # changed by Daniel La - HP Case 4644803487 (Can't see what is diff except the added comments)
+LINE 30: same as above
+LINE 67-73: getDisk() - function modified - no further comments
+
+PACKAGE: Oracle
+ADAPTER: SQL_Dis_Oracle
+
+SCRIPT: SQL_Dis_Oracle.py
+NOTES ON CHANGE: Many changes to the script, need to investigate further if need to replace the file or update it.
+
+PACKAGE: Active_Directory
+ADAPTER: LDAP_Active_Directory_Connection, LDAP_Active_Directory_Topology
+NOTES ON CHANGE: comm log create = always, include results in comm log = yes
+
+SCRIPT: LDAP_Active_Directory_Discovery.py
+NOTES ON CHANGE:
+LINE 58: Added one more test condition to the if statement. (not protocolPort \)
+
+PACKAGE: Host_Resources_By_PowerShell
+NOTES ON CHANGE: Create comm log = Never
+
+PACKAGE: Host_Resources_By_TTY
+NOTES ON CHANGE: Create Comm log = Always
+
+PACKAGE: Mainframe_by_EView
+ADAPTERS: DB2 by EView, LPAR Resources by EView, MQ by EView
+NOTES ON CHANGE: create comm log = always,
+
+PACKAGE: ApacheTomcat
+NOTES ON CHANGE: create comm log = yes
+
+PACKAGE: J2EE
+ADAPTERS: JBoss_By_Shell, WebSphere By Shell
+NOTES ON CHANGE: create comm log = always, include results in comm log = yes
+
+SCRIPT: jboss_discoverer.py
+NOTES ON CHANGE: many changes in this script, however the script is reworked in the new CP, need to investigate further.
+
+SCRIPT: websphere_by_shell.py
+NOTES ON CHANGE: many changes in this script, however the script is reworked in the new CP, need to investigate further.
+
+PACKAGE: Websphere_MQ
+NOTES ON CHANGE: many changes in this script, however the script is reworked in the new CP, need to investigate further.
+
